@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>What Type of Person Are You?</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --orange: #FA4616;
+    --blue: #0021A5;
+    --dark: #1a1a2e;
+    --light: #f8f9fa;
+    --card-bg: #ffffff;
+    --shadow: 0 8px 32px rgba(0,0,0,0.12);
+    --radius: 16px;
+  }
+
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: var(--dark);
+    color: #333;
+    min-height: 100dvh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
+
+  .container {
+    width: 100%;
+    max-width: 420px;
+    min-height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    position: relative;
+  }
+
+  /* ── Intro Screen ── */
+  .screen {
+    display: none;
+    width: 100%;
+    animation: fadeSlideIn 0.5s ease forwards;
+  }
+  .screen.active { display: flex; flex-direction: column; align-items: center; }
+
+  @keyframes fadeSlideIn {
+    from { opacity: 0; transform: translateY(24px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes fadeSlideOut {
+    from { opacity: 1; transform: translateY(0); }
+    to { opacity: 0; transform: translateY(-24px); }
+  }
+  .screen.exiting {
+    animation: fadeSlideOut 0.35s ease forwards;
+  }
+
+  .intro-icon {
+    font-size: 56px;
+    margin-bottom: 16px;
+  }
+
+  .intro-title {
+    font-size: 28px;
+    font-weight: 900;
+    color: #fff;
+    text-align: center;
+    line-height: 1.2;
+    margin-bottom: 8px;
+  }
+
+  .intro-sub {
+    font-size: 15px;
+    color: rgba(255,255,255,0.55);
+    text-align: center;
+    margin-bottom: 32px;
+    line-height: 1.5;
+  }
+
+  .btn-start {
+    background: linear-gradient(135deg, var(--orange), #ff6b3d);
+    color: #fff;
+    border: none;
+    padding: 16px 48px;
+    border-radius: 50px;
+    font-size: 17px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+    box-shadow: 0 4px 20px rgba(250,70,22,0.4);
+    -webkit-tap-highlight-color: transparent;
+  }
+  .btn-start:active { transform: scale(0.96); }
+
+  /* ── Progress Bar ── */
+  .progress-bar {
+    width: 100%;
+    height: 4px;
+    background: rgba(255,255,255,0.1);
+    border-radius: 4px;
+    margin-bottom: 32px;
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--orange), #ff6b3d);
+    border-radius: 4px;
+    transition: width 0.5s ease;
+  }
+
+  .question-num {
+    font-size: 13px;
+    font-weight: 600;
+    color: rgba(255,255,255,0.35);
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin-bottom: 12px;
+  }
+
+  .question-text {
+    font-size: 22px;
+    font-weight: 800;
+    color: #fff;
+    text-align: center;
+    line-height: 1.3;
+    margin-bottom: 28px;
+    min-height: 60px;
+  }
+
+  /* ── Answer Options ── */
+  .options {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .option-btn {
+    width: 100%;
+    background: rgba(255,255,255,0.06);
+    border: 1.5px solid rgba(255,255,255,0.1);
+    border-radius: 14px;
+    padding: 16px 20px;
+    color: #fff;
+    font-size: 15px;
+    font-weight: 500;
+    text-align: left;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    -webkit-tap-highlight-color: transparent;
+    line-height: 1.4;
+  }
+  .option-btn:active {
+    transform: scale(0.97);
+  }
+  .option-btn:hover {
+    background: rgba(255,255,255,0.1);
+    border-color: rgba(255,255,255,0.2);
+  }
+  .option-btn.selected {
+    background: rgba(250,70,22,0.15);
+    border-color: var(--orange);
+    color: #fff;
+  }
+
+  .option-emoji {
+    font-size: 24px;
+    flex-shrink: 0;
+    width: 36px;
+    text-align: center;
+  }
+
+  .option-text {
+    flex: 1;
+  }
+
+  /* ── Loading Screen ── */
+  .loading-text {
+    color: rgba(255,255,255,0.6);
+    font-size: 15px;
+    font-weight: 500;
+    text-align: center;
+    margin-top: 20px;
+  }
+
+  .spinner {
+    width: 48px;
+    height: 48px;
+    border: 3px solid rgba(255,255,255,0.1);
+    border-top-color: var(--orange);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .loading-steps {
+    margin-top: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    align-items: center;
+  }
+  .loading-step {
+    color: rgba(255,255,255,0.3);
+    font-size: 13px;
+    transition: color 0.4s;
+  }
+  .loading-step.done {
+    color: rgba(255,255,255,0.6);
+  }
+  .loading-step.done::before {
+    content: '✓ ';
+    color: var(--orange);
+  }
+
+  /* ── Result Screen ── */
+  .result-card {
+    background: var(--card-bg);
+    border-radius: 20px;
+    padding: 32px 24px;
+    width: 100%;
+    box-shadow: var(--shadow);
+    text-align: center;
+    animation: resultPop 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  }
+  @keyframes resultPop {
+    from { opacity: 0; transform: scale(0.85); }
+    to { opacity: 1; transform: scale(1); }
+  }
+
+  .result-label {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 3px;
+    color: var(--orange);
+    margin-bottom: 8px;
+  }
+
+  .result-title {
+    font-size: 26px;
+    font-weight: 900;
+    color: var(--dark);
+    margin-bottom: 16px;
+    line-height: 1.2;
+  }
+
+  .result-emoji-row {
+    font-size: 32px;
+    margin-bottom: 20px;
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+  }
+
+  .result-description {
+    font-size: 15px;
+    color: #555;
+    line-height: 1.7;
+    margin-bottom: 24px;
+    text-align: left;
+  }
+
+  .result-description strong {
+    color: var(--dark);
+  }
+
+  .result-divider {
+    width: 40px;
+    height: 3px;
+    background: var(--orange);
+    border-radius: 3px;
+    margin: 0 auto 20px;
+  }
+
+  .result-footer {
+    font-size: 14px;
+    color: #888;
+    line-height: 1.6;
+    font-style: italic;
+  }
+
+  .result-reveal {
+    margin-top: 24px;
+    padding-top: 20px;
+    border-top: 1px solid #eee;
+    opacity: 0;
+    animation: revealFade 1s ease 1.5s forwards;
+  }
+  @keyframes revealFade {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  .reveal-text {
+    font-size: 15px;
+    color: #999;
+    line-height: 1.6;
+  }
+  .reveal-text .dad {
+    color: var(--dark);
+    font-weight: 700;
+    font-style: normal;
+  }
+
+  .gator-chomp {
+    display: inline-block;
+    animation: chomp 0.6s ease infinite;
+    font-size: 28px;
+    margin-top: 12px;
+  }
+  @keyframes chomp {
+    0%, 100% { transform: scaleY(1); }
+    50% { transform: scaleY(0.7); }
+  }
+
+  /* ── Confetti ── */
+  .confetti-container {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    pointer-events: none;
+    z-index: 100;
+    overflow: hidden;
+  }
+  .confetti-piece {
+    position: absolute;
+    width: 10px;
+    height: 10px;
+    top: -20px;
+    animation: confettiFall linear forwards;
+  }
+  @keyframes confettiFall {
+    0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+    100% { transform: translateY(110vh) rotate(720deg); opacity: 0; }
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+
+  <!-- INTRO -->
+  <div class="screen active" id="intro">
+    <div class="intro-icon">🔮</div>
+    <h1 class="intro-title">What Type of Person Are You?</h1>
+    <p class="intro-sub">Answer 5 quick questions.<br>Our advanced algorithm will reveal your true personality.</p>
+    <button class="btn-start" onclick="startQuiz()">Let's Go</button>
+  </div>
+
+  <!-- QUESTIONS -->
+  <div class="screen" id="quiz">
+    <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+    <div class="question-num" id="qNum">Question 1 of 5</div>
+    <div class="question-text" id="qText"></div>
+    <div class="options" id="options"></div>
+  </div>
+
+  <!-- LOADING -->
+  <div class="screen" id="loading">
+    <div class="spinner"></div>
+    <div class="loading-text">Analyzing your responses...</div>
+    <div class="loading-steps">
+      <div class="loading-step" id="ls1">Cross-referencing personality matrix</div>
+      <div class="loading-step" id="ls2">Calibrating identity algorithm</div>
+      <div class="loading-step" id="ls3">Generating your profile</div>
+    </div>
+  </div>
+
+  <!-- RESULT -->
+  <div class="screen" id="result">
+    <div class="result-card">
+      <div class="result-label">Your Result</div>
+      <div class="result-title">You are 100% <em>that</em> girl.</div>
+      <div class="result-emoji-row">
+        <span>🐊</span><span>🎾</span><span>🤠</span><span>🚙</span><span>🥐</span>
+      </div>
+      <div class="result-description">
+        A <strong>Ford Bronco-driving</strong>, <strong>tennis-serving</strong>, <strong>country-music-loving</strong>, <strong>Gator-chomping</strong> future Physical Therapist who just got back from <strong>Paris</strong> and has family that says <strong>"brilliant"</strong> instead of <strong>"awesome."</strong>
+        <br><br>
+        You are statistically one of a kind.<br>
+        The algorithm had absolutely no chance.
+      </div>
+      <div class="result-divider"></div>
+      <div class="result-footer">
+        Rarity score: <strong style="color:var(--orange);">1 in 8,000,000,000</strong>
+      </div>
+      <div class="result-reveal">
+        <div class="reveal-text">
+          ...this isn't a real quiz.<br>
+          <span class="dad">Your dad made this.</span><br>
+          He just wanted to make you smile.<br>
+        </div>
+        <div class="gator-chomp">🐊</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="confetti-container" id="confetti"></div>
+
+<script>
+const questions = [
+  {
+    text: "Pick your ideal Saturday morning.",
+    options: [
+      { emoji: "🎾", text: "Hitting forehands until your arm gives out" },
+      { emoji: "🚙", text: "Windows down, dirt road, country playlist on full volume" },
+      { emoji: "🥐", text: "A croissant and an espresso at a café you pretend is in Paris" },
+      { emoji: "📚", text: "Reviewing anatomy flashcards because 'the rotator cuff isn't going to learn itself'" }
+    ]
+  },
+  {
+    text: "Pick your spirit animal.",
+    options: [
+      { emoji: "🐊", text: "An alligator (obviously)" },
+      { emoji: "🎾", text: "An alligator in a tiny tennis skirt" },
+      { emoji: "🤠", text: "An alligator driving a Bronco blasting Morgan Wallen" },
+      { emoji: "🇬🇧", text: "An alligator with a British accent sipping tea with Aunty Maureen" }
+    ]
+  },
+  {
+    text: "Pick a drink.",
+    options: [
+      { emoji: "🧃", text: "Gatorade — it's basically a personality trait at this point" },
+      { emoji: "🫖", text: "A proper cuppa from your grandfather's kitchen in England" },
+      { emoji: "☕", text: "Café au lait from that place in Paris you'll never stop talking about" },
+      { emoji: "🍹", text: "Sweet tea from a front porch that only exists in country songs" }
+    ]
+  },
+  {
+    text: "You have one free hour. What are you doing?",
+    options: [
+      { emoji: "💪", text: "Studying muscle groups because you genuinely find the human body fascinating" },
+      { emoji: "🎵", text: "Making a playlist that's 98% country and 2% plausible deniability" },
+      { emoji: "📸", text: "Scrolling through your Paris photos for the 47th time" },
+      { emoji: "🐊", text: "Doing the Gator Chomp alone in your room and hoping no one saw" }
+    ]
+  },
+  {
+    text: "Pick the sentence that sounds most like something you'd say.",
+    options: [
+      { emoji: "🏋️", text: "'I'm not competitive, I just don't like losing.'" },
+      { emoji: "✈️", text: "'I could literally live in Europe.'" },
+      { emoji: "🚙", text: "'Don't touch my Bronco.'" },
+      { emoji: "🐊", text: "'It's a Gator thing. You wouldn't understand.'" }
+    ]
+  }
+];
+
+let current = 0;
+
+function startQuiz() {
+  transition('intro', 'quiz');
+  showQuestion(0);
+}
+
+function showQuestion(idx) {
+  current = idx;
+  const q = questions[idx];
+  document.getElementById('qNum').textContent = `Question ${idx + 1} of ${questions.length}`;
+  document.getElementById('qText').textContent = q.text;
+  document.getElementById('progressFill').style.width = `${((idx) / questions.length) * 100}%`;
+
+  const optContainer = document.getElementById('options');
+  optContainer.innerHTML = '';
+
+  q.options.forEach((opt, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'option-btn';
+    btn.innerHTML = `<span class="option-emoji">${opt.emoji}</span><span class="option-text">${opt.text}</span>`;
+    btn.addEventListener('click', () => selectOption(btn, i));
+    optContainer.appendChild(btn);
+  });
+}
+
+function selectOption(btn, idx) {
+  // highlight
+  document.querySelectorAll('.option-btn').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+
+  // brief delay then next
+  setTimeout(() => {
+    if (current < questions.length - 1) {
+      const quizScreen = document.getElementById('quiz');
+      quizScreen.classList.add('exiting');
+      setTimeout(() => {
+        quizScreen.classList.remove('exiting');
+        showQuestion(current + 1);
+        quizScreen.style.animation = 'none';
+        quizScreen.offsetHeight; // reflow
+        quizScreen.style.animation = '';
+      }, 300);
+    } else {
+      document.getElementById('progressFill').style.width = '100%';
+      setTimeout(() => {
+        transition('quiz', 'loading');
+        runLoading();
+      }, 400);
+    }
+  }, 500);
+}
+
+function runLoading() {
+  setTimeout(() => document.getElementById('ls1').classList.add('done'), 800);
+  setTimeout(() => document.getElementById('ls2').classList.add('done'), 1800);
+  setTimeout(() => document.getElementById('ls3').classList.add('done'), 2600);
+  setTimeout(() => {
+    transition('loading', 'result');
+    launchConfetti();
+  }, 3400);
+}
+
+function transition(fromId, toId) {
+  const from = document.getElementById(fromId);
+  const to = document.getElementById(toId);
+  from.classList.add('exiting');
+  setTimeout(() => {
+    from.classList.remove('active', 'exiting');
+    to.classList.add('active');
+  }, 350);
+}
+
+function launchConfetti() {
+  const container = document.getElementById('confetti');
+  const colors = ['#FA4616', '#0021A5', '#FFD700', '#FF6B3D', '#fff'];
+  for (let i = 0; i < 80; i++) {
+    const piece = document.createElement('div');
+    piece.className = 'confetti-piece';
+    piece.style.left = Math.random() * 100 + '%';
+    piece.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+    piece.style.width = (Math.random() * 8 + 6) + 'px';
+    piece.style.height = (Math.random() * 8 + 6) + 'px';
+    piece.style.borderRadius = Math.random() > 0.5 ? '50%' : '2px';
+    piece.style.animationDuration = (Math.random() * 2 + 2) + 's';
+    piece.style.animationDelay = (Math.random() * 1.5) + 's';
+    container.appendChild(piece);
+  }
+  setTimeout(() => container.innerHTML = '', 5000);
+}
+</script>
+
+</body>
+</html>
